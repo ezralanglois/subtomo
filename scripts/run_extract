@@ -1,0 +1,26 @@
+
+extract="sh ./scripts/extract.sh"
+
+for coord in `ls -1 coords/INS_46_g1_t1_*.hdf` ; do
+#for coord in `ls -1 coords/*.hdf`; do
+
+output=stacks/${coord##*/}
+echo "$output"
+if [ ! -e "$output" ] ; then
+tomobase=${coord%_*}
+tomobase=`basename $tomobase`
+tomo=glucose/$tomobase/$tomobase.rec
+if [ ! -e "$tomo" ] ; then
+tomodir=${tomobase%_*}
+tomo=noglucose/$tomodir/$tomobase.rec
+fi
+if [ ! -e "$tomo" ] ; then
+echo "$coord"
+ls -1 $tomo
+fi
+echo $coord $tomo
+$extract $coord $tomo #> ${tomo}.log
+echo "---"
+fi
+done
+

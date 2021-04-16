@@ -1,0 +1,28 @@
+export PATH=$HOME/anaconda/bin:$PATH
+unset LD_LIBRARY_PATH
+#export PATH="/home/robertl/EMAN2/bin:/home/robertl/EMAN2/extlib/bin:/usr/local/bin:/usr/bin:/bin:/usr/lib64/mpi/gcc/openmpi/bin"
+#export PYTHONPATH="/home/robertl/EMAN2/lib:/home/robertl/EMAN2/bin:/home/robertl/MYMPI-1.1.5/lib"
+home=/data/robertl
+
+proj=$home/refine01
+ref=$home/tomographs/references/reference-80S-1093.hdf
+data=$home/stacks/INS_HG_22_g1_t1_noglucose_bound.hdf
+for data in `ls -1 stacks/*` ; do
+echo "$data"
+#data=$proj/INS_HG_22_g1_t1_noglucose_all.hdf
+#data=/CS1_data/robertl/tomographs/INS_HG_22_g1_t1_noglucose_all.hdf
+output=`basename $data`
+echo "`which mpirun`"
+n=4
+n=$((8 * $n))
+export EMANMPIOPTS="-machinefile machinefile -n $n"
+e2spt_classaverage.py \
+--input=$data \
+--output=aligned_${output} \
+--ref=$ref --mask=mask.gaussian:outer_radius=85 \
+--preprocess=filter.lowpass.gauss:cutoff_freq=0.125 --npeakstorefine=1 -v 3 --align=rotate_translate_3d:search=10:delta=8:dphi=8:verbose=2 \
+--aligncmp=ccc.tomo --falign=refine_3d_grid:delta=3:range=9:search=2 --faligncmp=ccc.tomo --averager=mean.tomo --keep=0.9 --iter=20 \
+--parallel=mpi:$n:/data/robertl/tmp --verbose=2 --path=output_${output%%.*} --shrink=5 --shrinkfine=3 --savesteps 
+
+done
+

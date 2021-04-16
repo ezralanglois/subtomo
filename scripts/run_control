@@ -1,0 +1,26 @@
+#export PATH=/gil.raid/home_gil/cheri/Gil_cluster/openmpi/bin:$PATH:/usr/local/bin
+#export LD_LIBRARY_PATH=/gil.raid/home_gil/cheri/Gil_cluster/openmpi/lib:$LD_LIBRARY_PATH 
+
+source /master.raid/home_master/robertl/EMAN2/eman2.bashrc
+
+orig=/master.raid/home_master/robertl/cheri/full_dataset
+proj=/master.raid/home_master/robertl/cheri/newdata/test
+#ref=$orig/control/polymerase2367.dat
+#ref=$proj/../../class_dataset/class_no_vesicle/reference_70S_5796.dat
+ref=$proj/reference.hdf
+
+
+#killall e2spt_classaverage.py
+echo "`which mpirun`"
+n=`wc -l machinefile | cut -f1 -d" "`
+n=$((32 * $n))
+export EMANMPIOPTS="-machinefile machinefile -n $n"
+e2spt_classaverage.py \
+--input=$proj/data/INS_HG_22_g1_t1_noglucose_all.hdf \
+--output=aligned_unbin_200.hdf \
+--ref=$ref --mask=mask.gaussian:outer_radius=85 \
+--preprocess=filter.lowpass.gauss:cutoff_freq=0.125 --npeakstorefine=1 -v 3 --align=rotate_translate_3d:search=10:delta=8:dphi=8:verbose=2 \
+--aligncmp=ccc.tomo --ralign=refine_3d_grid:delta=3:range=9:search=2 --raligncmp=ccc.tomo --averager=mean.tomo --keep=0.9 --iter=50 --nocenterofmass \
+--parallel=mpi:$n:/data/robertl --verbose=2 --path=run --shrink=5 --shrinkrefine=2 --savesteps 
+
+
