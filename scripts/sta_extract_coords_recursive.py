@@ -27,6 +27,14 @@ if __name__ == '__main__':
                 count = EMAN2.EMUtil.get_image_count(stack)
             except:
                 print("Skipping: {}".format(stack))
+                # Input is likely decimated coordinates, so try to undecimate
+                fout = open(output, 'w')
+                fin = open(stack, 'r')
+                for line in fin:
+                    coords = numpy.asarray([int(v) for v in line.split()])
+                    fout.write("\t".join(["%d"%int(c*8) for c in coords])+"\n")
+                fout.close()
+                fin.close()
                 continue
             fout = open(output, 'w')
             for i in xrange(count):
